@@ -1,19 +1,27 @@
 {
-    "name": "oasis/flysystem-wrappers",
+    "name"       : "oasis/flysystem-wrappers",
     "description": "Wrapping up league/flysystem to provide functionalities like append",
-    "type": "library",
-    "require": {
-        "league/flysystem": "^1.0",
-        "league/flysystem-aws-s3-v3": "^1.0"
+    "type"       : "library",
+    "require"    : {
+        "league/flysystem"          : "^1.0",
+        "league/flysystem-aws-s3-v3": "^1.0",
+        "symfony/finder": "^3.0"
     },
     "require-dev": {
-        "aws/aws-sdk-php": "^3.12"
+        "phpunit/phpunit": "^5.1",
+        "aws/aws-sdk-php": "^3.12",
+        "symfony/filesystem": "^3.0"
     },
-    "license": "MIT",
-    "authors": [
+    "license"    : "MIT",
+    "authors"    : [
         {
-            "name": "Minhao Zhang",
+            "name" : "Minhao Zhang",
             "email": "minhao.zhang@qq.com"
         }
-    ]
+    ],
+    "autoload" : {
+        "psr-4" : {
+            "Oasis\\Mlib\\FlysystemWrappers\\" : "src/"
+        }
+    }
 }
