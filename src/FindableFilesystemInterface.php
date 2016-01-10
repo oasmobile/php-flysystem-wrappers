@@ -8,9 +8,10 @@
 
 namespace Oasis\Mlib\FlysystemWrappers;
 
+use League\Flysystem\FilesystemInterface;
 use Symfony\Component\Finder\Finder;
 
-interface FindableFilesystemInterface
+interface FindableFilesystemInterface extends FilesystemInterface
 {
     /**
      * @param string $path child path to find in

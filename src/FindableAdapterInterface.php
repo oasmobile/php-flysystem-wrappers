@@ -8,9 +8,10 @@
 
 namespace Oasis\Mlib\FlysystemWrappers;
 
+use League\Flysystem\AdapterInterface;
 use Symfony\Component\Finder\Finder;
 
-interface FindableAdapterInterface
+interface FindableAdapterInterface extends AdapterInterface
 {
     /**
      * @param string $path child path to find in
