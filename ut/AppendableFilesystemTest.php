@@ -7,8 +7,8 @@
  */
 namespace Oasis\Mlib\UnitTesting;
 
-use Oasis\Mlib\FlysystemWrappers\AppendableFilesystem;
-use Oasis\Mlib\FlysystemWrappers\AppendableLocal;
+use Oasis\Mlib\FlysystemWrappers\ExtendedFilesystem;
+use Oasis\Mlib\FlysystemWrappers\ExtendedLocal;
 use PHPUnit_Framework_TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -31,8 +31,8 @@ class AppendableFilesystemTest extends PHPUnit_Framework_TestCase
 
     public function testAppendableFilesystemCreation()
     {
-        $adapter = new AppendableLocal($this->tempdir);
-        $fs      = new AppendableFilesystem($adapter);
+        $adapter = new ExtendedLocal($this->tempdir);
+        $fs      = new ExtendedFilesystem($adapter);
 
         return $fs;
     }
@@ -40,11 +40,11 @@ class AppendableFilesystemTest extends PHPUnit_Framework_TestCase
     /**
      * @depends testAppendableFilesystemCreation
      *
-     * @param AppendableFilesystem $fs
+     * @param ExtendedFilesystem $fs
      *
-     * @return AppendableFilesystem
+     * @return ExtendedFilesystem
      */
-    public function testAppendStreamOnNewFile(AppendableFilesystem $fs)
+    public function testAppendStreamOnNewFile(ExtendedFilesystem $fs)
     {
         $newFile = "new_file.txt";
 
@@ -65,11 +65,11 @@ STRING;
     /**
      * @depends testAppendStreamOnNewFile
      *
-     * @param AppendableFilesystem $fs
+     * @param ExtendedFilesystem $fs
      *
-     * @return AppendableFilesystem
+     * @return ExtendedFilesystem
      */
-    public function testAppendStreamOnExistingFile(AppendableFilesystem $fs)
+    public function testAppendStreamOnExistingFile(ExtendedFilesystem $fs)
     {
         $newFile = "new_file.txt";
 
@@ -96,5 +96,25 @@ STRING;
         $this->assertContains($orig . $str . $str2, $fs->read($newFile));
 
         return $fs;
+    }
+
+    /**
+     * @depends testAppendStreamOnNewFile
+     *
+     * @param ExtendedFilesystem $fs
+     *
+     * @return ExtendedFilesystem
+     */
+    public function testFinder(ExtendedFilesystem $fs)
+    {
+        $fs->put('a/b/c.txt', 'aaa');
+        $fs->put('a/b/d.txt', 'aaa');
+        $fs->put('a/b/d.jpg', 'aaa');
+        $fs->put('a/b/x.txt', 'aaa');
+        $fs->put('a/c/e.txt', 'aaa');
+
+        $finder = $fs->getFinder('a');
+        $finder->path('#b/[cd]\\.txt#');
+        $this->assertEquals(count($finder), 2);
     }
 }

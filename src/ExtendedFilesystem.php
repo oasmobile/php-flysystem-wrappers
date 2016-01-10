@@ -11,9 +11,10 @@ use League\Flysystem\AdapterInterface;
 use League\Flysystem\Filesystem;
 use League\Flysystem\NotSupportedException;
 use League\Flysystem\Util;
+use Symfony\Component\Finder\Finder;
 
-class AppendableFilesystem extends Filesystem
-    implements AppendableFilesystemInterface
+class ExtendedFilesystem extends Filesystem
+    implements AppendableFilesystemInterface, FindableFilesystemInterface
 {
     /**
      * @inheritdoc
@@ -62,5 +63,25 @@ class AppendableFilesystem extends Filesystem
         }
 
         return $object['stream'];
+    }
+
+    /**
+     * @param string $path child path to find in
+     *
+     * @return Finder
+     */
+    public function getFinder($path = '')
+    {
+        $path = Util::normalizePath($path);
+
+        $adapter = $this->getAdapter();
+        if (!$adapter instanceof FindableAdapterInterface) {
+            throw new NotSupportedException(
+                "Adapter doesn't support getFinder action. Adapter in use is: "
+                . get_class($adapter)
+            );
+        }
+
+        return $adapter->getFinder($path);
     }
 }

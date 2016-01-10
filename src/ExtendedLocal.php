@@ -10,9 +10,10 @@ namespace Oasis\Mlib\FlysystemWrappers;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Config;
 use League\Flysystem\Util;
+use Symfony\Component\Finder\Finder;
 
-class AppendableLocal extends Local
-    implements AppendableAdapterInterface
+class ExtendedLocal extends Local
+    implements AppendableAdapterInterface, FindableAdapterInterface
 {
     /**
      * @inheritdoc
@@ -64,5 +65,18 @@ class AppendableLocal extends Local
         }
 
         return compact('stream', 'path');
+    }
+
+    /**
+     * @param string $path child path to find in
+     *
+     * @return Finder
+     */
+    public function getFinder($path = '')
+    {
+        $finder = new Finder();
+        $finder->in($this->applyPathPrefix($path));
+
+        return $finder;
     }
 }
