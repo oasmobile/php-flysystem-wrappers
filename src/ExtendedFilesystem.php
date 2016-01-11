@@ -104,4 +104,13 @@ class ExtendedFilesystem extends Filesystem
 
         return $adapter->getRealpath($path);
     }
+
+    public function overwriteCopy($path, $newpath)
+    {
+        if ($this->has($newpath)) {
+            $this->delete($newpath);
+        }
+        $this->copy($path, $newpath);
+    }
+
 }
