@@ -15,6 +15,8 @@ use Symfony\Component\Finder\Finder;
 class ExtendedLocal extends Local
     implements AppendableAdapterInterface, FindableAdapterInterface
 {
+    protected $shouldRemoveEmptyDir = true;
+
     /**
      * @inheritdoc
      */
@@ -90,5 +92,59 @@ class ExtendedLocal extends Local
     public function getRealpath($path)
     {
         return $this->applyPathPrefix($path);
+    }
+
+    public function delete($path)
+    {
+        $result = parent::delete($path);
+
+        if ($this->shouldRemoveEmptyDir()) {
+            $location  = $this->applyPathPrefix($path);
+            $directory = dirname($location);
+            $this->removeDirectoryIfEmpty($directory, true);
+        }
+
+        return $result;
+    }
+
+    protected function removeDirectoryIfEmpty($directory, $recursively = true)
+    {
+        $root      = $this->getPathPrefix();
+        $root      = preg_replace('#/+#', '/', rtrim($root, "/"));
+        $directory = preg_replace('#/+#', '/', rtrim($directory, "/"));
+        if ($directory == $root) {
+            return;
+        }
+
+        $iter = $this->getDirectoryIterator($directory);
+        while ($iter->valid()) {
+            if ($iter->getFilename() != "." && $iter->getFilename() != "..") {
+                return;
+            }
+            $iter->next();
+        }
+        rmdir($directory);
+
+        if ($recursively) {
+            $parent = dirname($directory);
+            $this->removeDirectoryIfEmpty($parent, $recursively);
+        }
+
+    }
+
+    /**
+     * @return boolean
+     */
+    public function shouldRemoveEmptyDir()
+    {
+        return $this->shouldRemoveEmptyDir;
+    }
+
+    /**
+     * @param boolean $shouldRemoveEmptyDir
+     */
+    public function setShouldRemoveEmptyDir($shouldRemoveEmptyDir)
+    {
+        $this->shouldRemoveEmptyDir = $shouldRemoveEmptyDir;
     }
 }
