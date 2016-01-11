@@ -70,4 +70,19 @@ class ExtendedAwsS3Adapter extends AwsS3Adapter
 
         return $protocol;
     }
+
+    /**
+     * Returns real system path of $path, this can be absolute path on local filesystem, or s3:// prepended s3path
+     *
+     * @param string $path
+     *
+     * @return string
+     */
+    public function getRealpath($path)
+    {
+        $path   = $this->applyPathPrefix($path);
+        $s3path = sprintf("s3://%s/%s", $this->getBucket(), $path);
+
+        return $s3path;
+    }
 }

@@ -84,4 +84,24 @@ class ExtendedFilesystem extends Filesystem
 
         return $adapter->getFinder($path);
     }
+
+    /**
+     * Returns real system path of $path, this can be absolute path on local filesystem, or s3:// prepended s3path
+     *
+     * @param string $path
+     *
+     * @return string
+     */
+    public function getRealpath($path)
+    {
+        $adapter = $this->getAdapter();
+        if (!$adapter instanceof FindableAdapterInterface) {
+            throw new NotSupportedException(
+                "Adapter doesn't support getRealpath action. Adapter in use is: "
+                . get_class($adapter)
+            );
+        }
+
+        return $adapter->getRealpath($path);
+    }
 }

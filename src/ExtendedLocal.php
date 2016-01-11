@@ -79,4 +79,16 @@ class ExtendedLocal extends Local
 
         return $finder;
     }
+
+    /**
+     * Returns real system path of $path, this can be absolute path on local filesystem, or s3:// prepended s3path
+     *
+     * @param string $path
+     *
+     * @return string
+     */
+    public function getRealpath($path)
+    {
+        return $this->applyPathPrefix($path);
+    }
 }
