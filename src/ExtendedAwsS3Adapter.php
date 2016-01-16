@@ -85,4 +85,19 @@ class ExtendedAwsS3Adapter extends AwsS3Adapter
 
         return $s3path;
     }
+
+    public function getPreSignedUrl($path, $expires = "+30 minutes")
+    {
+        $location  = $this->applyPathPrefix($path);
+        $cmd       = $this->getClient()->getCommand(
+            "GetObject",
+            [
+                "Bucket" => $this->getBucket(),
+                "Key"    => $location,
+            ]
+        );
+        $presigned = $this->getClient()->createPresignedRequest($cmd, $expires);
+
+        return strval($presigned->getUri());
+    }
 }

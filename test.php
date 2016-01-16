@@ -7,11 +7,25 @@
  * Time: 00:25
  */
 
+use Aws\S3\S3Client;
+use Oasis\Mlib\FlysystemWrappers\ExtendedAwsS3Adapter;
 use Oasis\Mlib\FlysystemWrappers\ExtendedFilesystem;
-use Oasis\Mlib\FlysystemWrappers\ExtendedLocal;
 
 require_once 'vendor/autoload.php';
 
-$local = new ExtendedLocal('/tmp/');
-$fs    = new ExtendedFilesystem($local);
-$fs->delete('test/.aaa');
+$adapter = new ExtendedAwsS3Adapter(
+    new S3Client(
+        [
+            'profile' => 'dmp-user',
+            'region'  => 'us-east-1',
+            'version' => 'latest',
+        ]
+    ), 'brotsoft-dmp', 'test'
+);
+$fs = new ExtendedFilesystem($adapter);
+
+$fs->put('haha', 'lol');
+
+$uri = $adapter->getPreSignedUrl('haha');
+
+var_dump($uri);
