@@ -5,18 +5,18 @@
  * Date: 2015-09-09
  * Time: 16:25
  */
+
 namespace Oasis\Mlib\FlysystemWrappers;
 
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Config;
-use League\Flysystem\Util;
 use Symfony\Component\Finder\Finder;
 
 class ExtendedLocal extends Local
     implements AppendableAdapterInterface, FindableAdapterInterface
 {
     protected $shouldRemoveEmptyDir = true;
-
+    
     /**
      * @inheritdoc
      */
@@ -24,7 +24,7 @@ class ExtendedLocal extends Local
     {
         parent::__construct($root, $writeFlags, $linkHandling);
     }
-
+    
     /**
      * @inheritdoc
      */
@@ -33,26 +33,26 @@ class ExtendedLocal extends Local
         if (!$this->has($path)) {
             return $this->write($path, $contents, $config);
         }
-
+        
         $steam_obj = $this->appendStream($path);
         $fh        = $steam_obj['stream'];
-
+        
         if (($size = fwrite($fh, $contents)) === false) {
             return false;
         };
         fclose($fh);
-
+        
         $type   = 'file';
         $result = compact('type', 'size', 'path');
-
+        
         if ($visibility = $config->get('visibility')) {
             $result['visibility'] = $visibility;
             $this->setVisibility($path, $visibility);
         }
-
+        
         return $result;
     }
-
+    
     /**
      * @inheritdoc
      */
@@ -61,14 +61,62 @@ class ExtendedLocal extends Local
         $location = $this->applyPathPrefix($path);
         $this->ensureDirectory(dirname($location));
         $stream = fopen($location, 'a');
-
+        
         if (!is_resource($stream)) {
             return false;
         }
-
+        
         return compact('stream', 'path');
     }
-
+    
+    public function delete($path)
+    {
+        $result = parent::delete($path);
+        
+        if ($this->shouldRemoveEmptyDir()) {
+            $location  = $this->applyPathPrefix($path);
+            $directory = dirname($location);
+            $this->removeDirectoryIfEmpty($directory, true);
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * @return boolean
+     */
+    public function shouldRemoveEmptyDir()
+    {
+        return $this->shouldRemoveEmptyDir;
+    }
+    
+    public function writeStream($path, $resource, Config $config)
+    {
+        $location = $this->applyPathPrefix($path);
+        $this->ensureDirectory(dirname($location));
+        $stream = fopen($location, 'w+');
+        
+        if (!$stream) {
+            return false;
+        }
+        
+        $bufferSize = $config->get('buffer_size', 8192);
+        while ($written = stream_copy_to_stream($resource, $stream, $bufferSize)) {
+            ;
+        }
+        
+        if (!fclose($stream)) {
+            return false;
+        }
+        
+        if ($visibility = $config->get('visibility')) {
+            $this->setVisibility($path, $visibility);
+        }
+        
+        return compact('path', 'visibility');
+        
+    }
+    
     /**
      * @param string $path child path to find in
      *
@@ -78,10 +126,10 @@ class ExtendedLocal extends Local
     {
         $finder = new Finder();
         $finder->in($this->applyPathPrefix($path));
-
+        
         return $finder;
     }
-
+    
     /**
      * Returns real system path of $path, this can be absolute path on local filesystem, or s3:// prepended s3path
      *
@@ -93,20 +141,15 @@ class ExtendedLocal extends Local
     {
         return $this->applyPathPrefix($path);
     }
-
-    public function delete($path)
+    
+    /**
+     * @param boolean $shouldRemoveEmptyDir
+     */
+    public function setShouldRemoveEmptyDir($shouldRemoveEmptyDir)
     {
-        $result = parent::delete($path);
-
-        if ($this->shouldRemoveEmptyDir()) {
-            $location  = $this->applyPathPrefix($path);
-            $directory = dirname($location);
-            $this->removeDirectoryIfEmpty($directory, true);
-        }
-
-        return $result;
+        $this->shouldRemoveEmptyDir = $shouldRemoveEmptyDir;
     }
-
+    
     protected function removeDirectoryIfEmpty($directory, $recursively = true)
     {
         $root      = $this->getPathPrefix();
@@ -115,7 +158,7 @@ class ExtendedLocal extends Local
         if ($directory == $root) {
             return;
         }
-
+        
         $iter = $this->getDirectoryIterator($directory);
         while ($iter->valid()) {
             if ($iter->getFilename() != "." && $iter->getFilename() != "..") {
@@ -124,27 +167,11 @@ class ExtendedLocal extends Local
             $iter->next();
         }
         rmdir($directory);
-
+        
         if ($recursively) {
             $parent = dirname($directory);
             $this->removeDirectoryIfEmpty($parent, $recursively);
         }
-
-    }
-
-    /**
-     * @return boolean
-     */
-    public function shouldRemoveEmptyDir()
-    {
-        return $this->shouldRemoveEmptyDir;
-    }
-
-    /**
-     * @param boolean $shouldRemoveEmptyDir
-     */
-    public function setShouldRemoveEmptyDir($shouldRemoveEmptyDir)
-    {
-        $this->shouldRemoveEmptyDir = $shouldRemoveEmptyDir;
+        
     }
 }
